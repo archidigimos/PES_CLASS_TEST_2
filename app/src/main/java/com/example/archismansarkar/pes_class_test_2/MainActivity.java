@@ -63,13 +63,8 @@ public class MainActivity extends AppCompatActivity {
         int permissionStorage = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
 
         if ((permissionAudio != PackageManager.PERMISSION_GRANTED)||(permissionStorage != PackageManager.PERMISSION_GRANTED)) {
-            makeRequestRecord();
+            makeRequest();
         }
-        /*
-        if (permissionStorage != PackageManager.PERMISSION_GRANTED) {
-            makeRequestStorage();
-        }
-*/
         setButtonHandlers();
         enableButtons(false);
         textView = (TextView) findViewById(R.id.textView);
@@ -85,13 +80,8 @@ public class MainActivity extends AppCompatActivity {
                 RECORDER_CHANNELS, RECORDER_AUDIO_ENCODING);
     }
 
-    private void makeRequestRecord() {
+    private void makeRequest() {
         ActivityCompat.requestPermissions(this, ALL_PERMISSIONS, ALL_REQUEST_CODE);
-    }
-    private void makeRequestStorage() {
-        ActivityCompat.requestPermissions(this,
-                new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                STORAGE_REQUEST_CODE);
     }
 
     private void setButtonHandlers() {
