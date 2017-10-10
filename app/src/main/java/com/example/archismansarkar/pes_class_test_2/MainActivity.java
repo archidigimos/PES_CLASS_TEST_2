@@ -6,6 +6,7 @@ import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.os.Handler;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -15,6 +16,7 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.series.DataPoint;
@@ -24,6 +26,8 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.Buffer;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -53,18 +57,21 @@ public class MainActivity extends AppCompatActivity {
     private static final int RECORD_REQUEST_CODE = 101;
     private static final int STORAGE_REQUEST_CODE = 3;
     private static final int ALL_REQUEST_CODE = 0;
+    private int permissionAudio, permissionStorage;
+    private AppPermissions mRuntimePermission;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        int permissionAudio = ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO);
-        int permissionStorage = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
-
-        if ((permissionAudio != PackageManager.PERMISSION_GRANTED)||(permissionStorage != PackageManager.PERMISSION_GRANTED)) {
-            makeRequest();
+        mRuntimePermission = new AppPermissions(this);
+        if (mRuntimePermission.hasPermission(ALL_PERMISSIONS)) {
+            Toast.makeText(this, "All permission already given", Toast.LENGTH_SHORT).show();
+        } else {
+            mRuntimePermission.requestPermission(this, ALL_PERMISSIONS, ALL_REQUEST_CODE);
         }
+
         setButtonHandlers();
         enableButtons(false);
         textView = (TextView) findViewById(R.id.textView);
@@ -213,13 +220,21 @@ public class MainActivity extends AppCompatActivity {
         public void onClick(View v) {
             switch (v.getId()) {
                 case R.id.btnStart: {
-                    enableButtons(true);
-                    startRecording();
+                    if (mRuntimePermission.hasPermission(ALL_PERMISSIONS)) {
+                        enableButtons(true);
+                        startRecording();
+                    } else {
+                        mRuntimePermission.requestPermission(MainActivity.this, ALL_PERMISSIONS, ALL_REQUEST_CODE);
+                    }
                     break;
                 }
                 case R.id.btnStop: {
-                    enableButtons(false);
-                    stopRecording();
+                    if (mRuntimePermission.hasPermission(ALL_PERMISSIONS)) {
+                        enableButtons(false);
+                        stopRecording();
+                    } else {
+                        mRuntimePermission.requestPermission(MainActivity.this, ALL_PERMISSIONS, ALL_REQUEST_CODE);
+                    }
                     break;
                 }
             }
@@ -238,6 +253,39 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onPause() {
         super.onPause();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                                     @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        switch (requestCode) {
+            case ALL_REQUEST_CODE:
+                List<Integer> permissionResults = new ArrayList<>();
+                for (int grantResult : grantResults) {
+                    permissionResults.add(grantResult);
+                }
+                if (permissionResults.contains(PackageManager.PERMISSION_DENIED)) {
+                    Toast.makeText(this, "All Permissions not granted", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(this, "All Permissions granted", Toast.LENGTH_SHORT).show();
+                }
+                break;
+            case RECORD_REQUEST_CODE:
+                if (grantResults[0] == PackageManager.PERMISSION_DENIED) {
+                    Toast.makeText(this, "Microphone Permissions not granted", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(this, "Microphone Permissions granted", Toast.LENGTH_SHORT).show();
+                }
+                break;
+            case STORAGE_REQUEST_CODE:
+                if (grantResults[0] == PackageManager.PERMISSION_DENIED) {
+                    Toast.makeText(this, "Storage Permissions not granted", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(this, "Storage Permissions granted", Toast.LENGTH_SHORT).show();
+                }
+                break;
+        }
     }
 
 
