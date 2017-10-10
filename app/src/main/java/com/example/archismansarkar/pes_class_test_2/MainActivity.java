@@ -1,9 +1,13 @@
 package com.example.archismansarkar.pes_class_test_2;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.os.Handler;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -41,11 +45,31 @@ public class MainActivity extends AppCompatActivity {
     public double decibel = 0d;
     public TextView textView;
 
+    private static final String[] ALL_PERMISSIONS = {
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.RECORD_AUDIO
+    };
+
+    private static final int RECORD_REQUEST_CODE = 101;
+    private static final int STORAGE_REQUEST_CODE = 3;
+    private static final int ALL_REQUEST_CODE = 0;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        int permissionAudio = ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO);
+        int permissionStorage = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+
+        if ((permissionAudio != PackageManager.PERMISSION_GRANTED)||(permissionStorage != PackageManager.PERMISSION_GRANTED)) {
+            makeRequestRecord();
+        }
+        /*
+        if (permissionStorage != PackageManager.PERMISSION_GRANTED) {
+            makeRequestStorage();
+        }
+*/
         setButtonHandlers();
         enableButtons(false);
         textView = (TextView) findViewById(R.id.textView);
@@ -59,6 +83,15 @@ public class MainActivity extends AppCompatActivity {
 
         int bufferSize = AudioRecord.getMinBufferSize(RECORDER_SAMPLERATE,
                 RECORDER_CHANNELS, RECORDER_AUDIO_ENCODING);
+    }
+
+    private void makeRequestRecord() {
+        ActivityCompat.requestPermissions(this, ALL_PERMISSIONS, ALL_REQUEST_CODE);
+    }
+    private void makeRequestStorage() {
+        ActivityCompat.requestPermissions(this,
+                new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                STORAGE_REQUEST_CODE);
     }
 
     private void setButtonHandlers() {
@@ -216,4 +249,6 @@ public class MainActivity extends AppCompatActivity {
     public void onPause() {
         super.onPause();
     }
+
+
 }
